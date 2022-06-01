@@ -1,6 +1,6 @@
 from random import randrange
 from copy import deepcopy
-import sys # Library for INT_MAX
+from queue import PriorityQueue
 
 
 class UndirectedGraph:
@@ -150,103 +150,72 @@ class UndirectedGraph:
         """
         return deepcopy(self)
 
-    # A utility function to print the constructed MST stored in parent[]
-    def printMST(self, parent):
-        print ("Edge \tWeight")
-        for i in range(1, self.V):
-            print (parent[i], "-", i, "\t", self.graph[i][parent[i]])
+    def print_mst(self, parent):
+        print("Edge \tWeight")
+        for i in range(0, len(parent)):
+            print(parent[i][0], "-", parent[i][1], "\t", self.get_edge_cost(parent[i][0], parent[i][1]))
 
-    # A utility function to find the vertex with
-    # minimum distance value, from the set of vertices
-    # not yet included in shortest path tree
-    def minKey(self, key, mstSet):
+    def prim_mst(self):
+        edges = []
+        q = PriorityQueue()
+        prev = {}
+        dist = {}
+        vertices = {0}
+        for x in self._neighbours[0]:
+            dist[x] = self.get_edge_cost(x, 0)
+            prev[x] = 0
+            q.put((dist[x], x))
 
-        # Initialize min value
-        min = sys.maxsize
+        while not q.empty():
+            x = q.get()[1]
+            if x not in vertices:
+                edges.append([prev[x], x])
+                vertices.add(x)
+                for y in self._neighbours[x]:
+                    if y not in dist.keys() or self.get_edge_cost(x, y) < dist[y]:
+                        dist[y] = self.get_edge_cost(x, y)
+                        q.put((dist[y], y))
+                        prev[y] = x
 
-        for v in range(self.count_vertices()):
-            if key[v] < min and mstSet[v] == False:
-                min = key[v]
-                min_index = v
+        return edges
 
-        return min_index
+    def ham(self):
+        mst = self.prim_mst()
+        path = []
 
-    # Function to construct and print MST for a graph
-    # represented using adjacency matrix representation
-    def primMST(self):
+        # Construct a mst graph
+        g = UndirectedGraph(len(self._vertices))
+        for edge in mst:
+            g.add_edge(edge[0], edge[1], self.get_edge_cost(edge[0], edge[1]))
 
-        # Key values used to pick minimum weight edge in cut
-        key = [sys.maxsize] * self.count_vertices()
-        parent = [None] * self.count_vertices()  # Array to store constructed MST
-        # Make key 0 so that this vertex is picked as first vertex
-        key[0] = 0
-        mstSet = [False] * self.count_vertices()
+        # doing a bft with preorder to construct the  path
+        q = [0]
+        visited = {0}
+        path.append(0)
+        while len(q) != 0:
+            el = q.pop(0)
+            for c in self._neighbours[el]:
+                if c not in visited:
+                    visited.add(c)
+                    path.append(c)
+                    q.append(c)
 
-        parent[0] = -1  # First node is always the root of
+        path.append(0)
+        return path
 
-        for cout in range(self.count_vertices()):
+    def print_ham(self):
+        ham = self.ham()
+        s = "A Hamilton cycle is: "
 
-            # Pick the minimum distance vertex from
-            # the set of vertices not yet processed.
-            # u is always equal to src in first iteration
-            u = self.minKey(key, mstSet)
+        for n in ham:
+            s += str(n)
+            s += "-"
 
-            # Put the minimum distance vertex in
-            # the shortest path tree
-            mstSet[u] = True
+        s = s[:-1]
 
-            # Update dist value of the adjacent vertices
-            # of the picked vertex only if the current
-            # distance is greater than new distance and
-            # the vertex in not in the shortest path tree
-            for v in range(self.V):
+        print(s)
 
-                # graph[u][v] is non zero only for adjacent vertices of m
-                # mstSet[v] is false for vertices not yet included in MST
-                # Update the key only if graph[u][v] is smaller than key[v]
-                if self.graph[u][v] > 0 and mstSet[v] == False and key[v] > self.graph[u][v]:
-                    key[v] = self.graph[u][v]
-                    parent[v] = u
-
-        self.printMST(parent)
-
-
-class Graph():
-
-    def __init__(self, vertices):
-        self.V = vertices
-        self.graph = [[0 for column in range(vertices)]
-                      for row in range(vertices)]
-
-    def printMST(self, parent):
-        print ("Edge \tWeight")
-        for i in range(1, self.V):
-            print (parent[i], "-", i, "\t", self.graph[i][parent[i]])
-
-    # Find the vertex with the minimum distance value, from the set of vertices not yet included in shortest path tree
-    def minKey(self, key, mstSet):
-        min = sys.maxsize
-        for v in range(self.V):
-            if key[v] < min and mstSet[v] is False:
-                min = key[v]
-                min_index = v
-
-        return min_index
-
-    def primMST(self):
-        key = [sys.maxsize] * self.V
-        parent = [None] * self.V  # Array to store constructed MST
-        mstSet = [False] * self.V
-        # First vertex is 0
-        key[0] = 0
-        parent[0] = -1  # First node is the root of MST
-        for c in range(self.V):
-            u = self.minKey(key, mstSet)
-            mstSet[u] = True
-            for v in range(self.V):
-                if self.graph[u][v] > 0 and mstSet[v] == False and key[v] > self.graph[u][v]:
-                    key[v] = self.graph[u][v]
-                    parent[v] = u
-
-        self.printMST(parent)
+# Useful links: https://www.geeksforgeeks.org/travelling-salesman-problem-set-2-approximate-using-mst/
+# http://www.cs.uni.edu/~fienup/cs270s04/lectures/lec29_4-27-04.htm
+# https://iq.opengenus.org/approximation-algorithm-for-travelling-salesman-problem/
 

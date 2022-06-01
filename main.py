@@ -1,5 +1,4 @@
 from graph import UndirectedGraph
-from graph import Graph
 from random import randrange
 from queue import Queue
 
@@ -13,6 +12,7 @@ def connected_components(graph):
             q.put(vertex)
             met.add(vertex)
             ans.append([vertex])
+
 
             while not q.empty():
                 node = q.get()
@@ -156,9 +156,12 @@ class Console:
         print(connected_components(self.__graph))
 
     def __prims(self):
-        g = Graph(self.__graph.count_vertices())
-        g.graph = toMatrix(self.__graph)
-        g.primMST()
+        parent = self.__graph.prim_mst()
+        print(parent)
+        self.__graph.print_mst(parent)
+
+    def __ham(self):
+        self.__graph.print_ham()
 
     @staticmethod
     def print_menu():
@@ -179,6 +182,7 @@ class Console:
         print("8.Remove a vertex")
         print("9.Remove an edge")
         print("10.Minimal spanning tree using the Prim's algorithm")
+        print("11.Hamiltonian Cycle")
 
     def run(self):
         while True:
@@ -216,7 +220,8 @@ class Console:
                 self.__print_graph()
             if cmd == "10":
                 self.__prims()
-
+            if cmd == "11":
+                self.__ham()
 
 c = Console()
 c.run()
